@@ -1,0 +1,4 @@
+.clipreator_tmp/
+.venv/
+bin/
+.envrc
