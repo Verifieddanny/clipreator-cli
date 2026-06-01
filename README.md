@@ -155,7 +155,6 @@ clipreator/
 │   └── captioner/
 │       └── captioner.go     # ASS subtitle generation + burn
 ├── go.mod
-├── Makefile
 └── README.md
 ```
 
