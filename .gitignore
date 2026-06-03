@@ -2,3 +2,4 @@
 .venv/
 bin/
 .envrc
+.DS_Store
