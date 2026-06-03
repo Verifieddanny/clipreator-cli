@@ -42,7 +42,7 @@ clipreator -url="https://youtu.be/your-video-id"
 
 1. **Downloads** the audio from any YouTube video using `yt-dlp`
 2. **Transcribes** with OpenAI Whisper running locally — word-level timestamps included
-3. **Finds the best clips** using AI (Claude or OpenAI — your choice) to identify the 3-5 most viral-worthy 30-90 second segments
+3. **Finds the best clips** using AI (Claude, OpenAI, or Ollama) to identify the 3-5 most viral-worthy 30-90 second segments
 4. **Downloads the full video** and cuts at the AI-selected timestamps
 5. **Crops to 9:16 vertical** — center crop optimized for short-form platforms
 6. **Removes dead space** — detects silence gaps and cuts them out for tighter pacing
@@ -54,7 +54,10 @@ clipreator -url="https://youtu.be/your-video-id"
 - **Python** 3.8+ (for Whisper)
 - **ffmpeg** with libass and libfreetype (for captions)
 - **yt-dlp** (for downloading)
-- **API key** — either Anthropic (Claude) or OpenAI
+- **AI backend** — choose one:
+  - Ollama (free, local, no API key)
+  - OpenAI API key
+  - Anthropic API key (Claude)
 
 ## Installation
 
@@ -72,19 +75,41 @@ source .venv/bin/activate
 pip install openai-whisper
 ```
 
-### 2. Set your API key
+### 2. Choose your AI backend
 
-Pick one — Claude (recommended) or OpenAI:
+**Option A: Free with Ollama (no API key needed)**
 
 ```bash
-# Option A: Claude (recommended — better highlight detection)
-export ANTHROPIC_API_KEY=your-key-here
+# Install Ollama
+brew install ollama
+# Or download from https://ollama.com/download
 
-# Option B: OpenAI
+# Pull a model (Qwen 2.5 recommended for best local results)
+ollama pull qwen2.5:7b
+
+# Set the model (optional, defaults to qwen2.5:7b)
+export OLLAMA_MODEL=qwen2.5:7b
+```
+
+That's it. No signup, no credit card. Runs entirely on your machine.
+
+**Option B: OpenAI**
+
+```bash
 export OPENAI_API_KEY=your-key-here
 ```
 
-If both keys are set, Claude takes priority. Sign up at [console.anthropic.com](https://console.anthropic.com) or [platform.openai.com](https://platform.openai.com).
+Sign up at [platform.openai.com](https://platform.openai.com).
+
+**Option C: Claude (best quality)**
+
+```bash
+export ANTHROPIC_API_KEY=your-key-here
+```
+
+Sign up at [console.anthropic.com](https://console.anthropic.com).
+
+> **Priority:** If multiple keys are set, Clipreator uses Claude > OpenAI > Ollama automatically.
 
 ### 3. Build
 
@@ -106,6 +131,15 @@ source .venv/bin/activate
 
 Clips are saved to `.clipreator_tmp/clips/`.
 
+### Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Claude API key (best quality) | — |
+| `OPENAI_API_KEY` | OpenAI API key | — |
+| `OLLAMA_MODEL` | Ollama model name | `qwen2.5:7b` |
+| `OLLAMA_HOST` | Ollama server URL | `http://localhost:11434` |
+
 ## How It Works
 
 ```
@@ -122,9 +156,9 @@ YouTube URL
 └──────┬───────┘
        │
        ▼
-┌──────────────────┐
-│  Claude / OpenAI │  Pick best 3-5 viral moments
-└──────┬───────────┘
+┌─────────────────────────┐
+│  Claude / OpenAI / Ollama│  Pick best 3-5 viral moments
+└──────┬──────────────────┘
        │
        ▼
 ┌──────────────┐
@@ -145,6 +179,18 @@ YouTube URL
    Ready clips
 ```
 
+## Local Models: What Works
+
+Not all local models handle this task equally. Our testing:
+
+| Model | Quality | Notes |
+|---|---|---|
+| **Qwen 2.5 7B** | ⭐⭐⭐⭐ | Best local option. Follows JSON format well, picks good timestamps |
+| **Llama 3.1 8B** | ⭐⭐ | Often produces clips under 10 seconds. Struggles with timestamp math |
+| **Mistral 7B** | ⭐⭐⭐ | Decent, occasionally misses the JSON format |
+
+For best results, use Claude or OpenAI. For free local processing, Qwen 2.5 7B is the recommended choice.
+
 ## Project Structure
 
 ```
@@ -156,12 +202,13 @@ clipreator/
 │   ├── transcriber/
 │   │   └── transcriber.go   # Audio download + Whisper transcription
 │   ├── analyzer/
-│   │   └── analyzer.go      # AI clip detection (Claude + OpenAI)
+│   │   └── analyzer.go      # AI clip detection (Claude + OpenAI + Ollama)
 │   ├── cutter/
 │   │   └── cutter.go        # Video cutting, cropping, silence removal
 │   └── captioner/
 │       └── captioner.go     # ASS subtitle generation + burn
 ├── go.mod
+├── Makefile
 └── README.md
 ```
 
@@ -169,15 +216,17 @@ clipreator/
 
 - **Go** — orchestration and CLI
 - **OpenAI Whisper** — local speech-to-text with word-level timestamps
-- **Claude API / OpenAI API** — AI-powered highlight detection (bring your own key)
+- **Claude API / OpenAI API / Ollama** — AI-powered highlight detection
 - **ffmpeg** — video processing, cropping, caption rendering
 - **yt-dlp** — YouTube downloading
 
 ## Roadmap
 
 - [x] OpenAI API support
+- [x] Ollama support (fully local, no API key needed)
 - [x] Caption sync with silence removal
-- [ ] Ollama support (fully local, no API key needed)
+- [x] Transcript truncation for local models
+- [x] Auto-retry for local models
 - [ ] Custom caption styles (font, color, position, animation)
 - [ ] Config file for editable settings
 - [ ] Face detection for smarter cropping
