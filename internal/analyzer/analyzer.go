@@ -25,8 +25,8 @@ type AnalysisResult struct {
 }
 
 func Analyze(transcript *transcriber.Transcript) (*AnalysisResult, error) {
-	anthropicKey := os.Getenv("ANTHROPIC_API_KEY_")
-	openaiKey := os.Getenv("OPENAI_API_KEY_")
+	anthropicKey := os.Getenv("ANTHROPIC_API_KEY")
+	openaiKey := os.Getenv("OPENAI_API_KEY")
 	ollamaModel := os.Getenv("OLLAMA_MODEL")
 
 	if anthropicKey == "" && openaiKey == "" && ollamaModel == "" {
